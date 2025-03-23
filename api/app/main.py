@@ -60,35 +60,30 @@ from sqlalchemy import and_
 def createPlaylist(playlist: PlaylistModel):
     session = getSession()
 
+    # Tentar buscar o usuário pelo nome
     try:
-        # Buscar o usuário pelo nome
-        user = session.execute(select(User).where(User.name == playlist.user_id)).scalars().first()
-
-        # Se o usuário não existir, criar um novo
+        user = session.execute(select(User).where(User.name == playlist.user_id)).scalar()
+        dbPlaylist = session.execute(select(Playlist).where(Playlist.name == playlist.name).where(Playlist.user_id == playlist.user_id)).scalar()
+        
         if user is None:
             user = User(name=playlist.user_id)
             session.add(user)
-            session.commit()  # Salva o usuário no banco para gerar o ID
-
-        # Verificar se já existe uma playlist com o mesmo nome para esse usuário
-        dbPlaylist = session.execute(
-            select(Playlist).where(and_(Playlist.name == playlist.name, Playlist.user_id == user.name))
-        ).scalars().first()
-
-        # Se a playlist já existir, retornar uma mensagem de erro
+        
         if dbPlaylist is not None:
+            # Lançando uma exceção HTTP com status 400 (Bad Request) e a mensagem de erro
             raise HTTPException(status_code=400, detail="Playlist com o mesmo nome já pertence a esse usuário!")
-        # Criar uma nova playlist
-        newPlaylist = Playlist(name=playlist.name, user_id=user.name)
+        
+        newPlaylist = Playlist(name=playlist.name, user_id=playlist.user_id)
         session.add(newPlaylist)
-
     except Exception as e:
-        return {"error": f"Erro ao criar a playlist: {e}"}
+        raise HTTPException(status_code=500, detail=f"Erro ao criar a playlist: {str(e)}")
 
     # Adicionar a playlist ao banco de dados
+    session.add(newPlaylist)
+
     try:
         session.commit()
-        return {"message": f"Playlist {playlist.name} criada com sucesso"}
+        return {"message": f"Playlist {playlist.name} criada com sucesso!"}
     except Exception as e:
         session.rollback()
-        return {"error": f"Erro ao salvar a playlist: {e}"}
+        raise HTTPException(status_code=500, detail=f"Erro ao criar a playlist: {str(e)}")

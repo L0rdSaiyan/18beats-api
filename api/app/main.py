@@ -59,7 +59,7 @@ def createPlaylist(playlist: PlaylistModel):
     # Tentar buscar o usuário pelo nome
     try:
         user = session.execute(select(User).where(User.name == playlist.user_id)).scalars().first()
-        dbPlaylist = session.execute(select(Playlist).where(Playlist.name == playlist.name)).scalar()
+        dbPlaylist = session.execute(select(Playlist).where(Playlist.name == playlist.name and Playlist.user_id = playlist.user_id)).scalar()
         if user is None:
             user = User(name=playlist.user_id)
             session.add(user)

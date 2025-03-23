@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from sqlalchemy import select, and_
-from api.app.database.schemas.schemas import User, Playlist, Music
-from api.app.database.db.db import getSession
-from api.app.models.playlist import PlaylistModel
-from api.app.models.music import MusicModel
+from sqlalchemy import select
+from app.database.schemas.schemas import User, Playlist, Music
+from app.database.db.db import getSession
+from app.models.playlist import PlaylistModel
+from app.models.music import MusicModel
 app = FastAPI()
 
 
@@ -52,36 +52,42 @@ def addMusicToPlaylist(music: MusicModel):
     except Exception as e:
         return f'erro: {e}'
 
+from sqlalchemy import and_
+
 @app.post("/api/post/createPlaylist")
 def createPlaylist(playlist: PlaylistModel):
     session = getSession()
 
     try:
-        # Tentar buscar o usuário pelo nome
+        # Buscar o usuário pelo nome
         user = session.execute(select(User).where(User.name == playlist.user_id)).scalars().first()
-        
-        # Verificar se já existe uma playlist com o mesmo nome para o mesmo usuário
-        dbPlaylist = session.execute(
-            select(Playlist).where(and_(Playlist.name == playlist.name, Playlist.user_id == user.id))
-        ).scalar()
 
+        # Se o usuário não existir, criar um novo
         if user is None:
             user = User(name=playlist.user_id)
             session.add(user)
-        
+            session.commit()  # Salva o usuário no banco para gerar o ID
+
+        # Verificar se já existe uma playlist com o mesmo nome para esse usuário
+        dbPlaylist = session.execute(
+            select(Playlist).where(and_(Playlist.name == playlist.name, Playlist.user_id == user.name))
+        ).scalars().first()
+
+        # Se a playlist já existir, retornar uma mensagem de erro
         if dbPlaylist is not None:
             return {"erro": "Playlist com o mesmo nome já pertence a esse usuário!"}
-        
-        # Criar a nova playlist
-        newPlaylist = Playlist(name=playlist.name, user_id=user.id)
+
+        # Criar uma nova playlist
+        newPlaylist = Playlist(name=playlist.name, user_id=user.name)
         session.add(newPlaylist)
 
     except Exception as e:
-        return {"error": f"Erro ao encontrar usuário ou criar playlist: {e}"}
+        return {"error": f"Erro ao criar a playlist: {e}"}
 
+    # Adicionar a playlist ao banco de dados
     try:
         session.commit()
         return {"message": f"Playlist {playlist.name} criada com sucesso"}
     except Exception as e:
         session.rollback()
-        return {"error": f"Erro ao criar playlist: {e}"}
+        return {"error": f"Erro ao salvar a playlist: {e}"}

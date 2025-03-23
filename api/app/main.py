@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from sqlalchemy import select
-from app.database.schemas.schemas import User, Playlist, Music
-from app.database.db.db import getSession
-from app.models.playlist import PlaylistModel
-from app.models.music import MusicModel
+from database.schemas.schemas import User, Playlist, Music
+from database.db.db import getSession
+from models.playlist import PlaylistModel
+from models.music import MusicModel
 app = FastAPI()
 
 

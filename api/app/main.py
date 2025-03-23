@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from sqlalchemy import select
 from api.app.database.schemas.schemas import User, Playlist, Music
 from api.app.database.db.db import getSession
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from api.app.models.playlist import PlaylistModel
 from api.app.models.music import MusicModel
 app = FastAPI()
@@ -75,8 +77,7 @@ def createPlaylist(playlist: PlaylistModel):
 
         # Se a playlist já existir, retornar uma mensagem de erro
         if dbPlaylist is not None:
-            return {"erro": "Playlist com o mesmo nome já pertence a esse usuário!"}
-
+            raise HTTPException(status_code=400, detail="Playlist com o mesmo nome já pertence a esse usuário!")
         # Criar uma nova playlist
         newPlaylist = Playlist(name=playlist.name, user_id=user.name)
         session.add(newPlaylist)

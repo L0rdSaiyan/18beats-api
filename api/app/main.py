@@ -86,4 +86,4 @@ def createPlaylist(playlist: PlaylistModel):
         return {"message": f"Playlist {playlist.name} criada com sucesso!"}
     except Exception as e:
         session.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao criar a playlist: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erro ao criar a playlist: {str(e)}")

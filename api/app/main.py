@@ -40,14 +40,14 @@ def getUserPlaylists(userName: str, playlistName: str):
 def getUserPlaylists(userName: str):
     session = getSession()
     
-    playlist = session.execute(select(Playlist)
-                               .where(Playlist.user_id == userName)
-                               ).scalars()
+    playlists = session.execute(select(Playlist).where(Playlist.user_id == userName)).scalars().all()
 
-    if playlist is None:
+    if not playlists:
         return {"message": f"Playlists for user {userName} not found"}
+
+    playlist_list = [playlist.as_dict() for playlist in playlists]
     
-    return playlist
+    return playlist_list
 
 
 @app.post('/api/post/addMusicPlaylist')

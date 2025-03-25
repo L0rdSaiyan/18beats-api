@@ -37,7 +37,7 @@ def getUserPlaylists(userName: str, playlistName: str):
     return playlist
 
 @app.get("/api/get/userplaylists/{userName}")
-def getUserPlaylists(userName: str, playlistName: str):
+def getUserPlaylists(userName: str):
     session = getSession()
     
     playlist = session.execute(select(Playlist)

@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from fastapi import FastAPI
 from sqlalchemy import select
 from api.app.database.schemas.schemas import User, Playlist, Music
@@ -25,7 +26,6 @@ def getUser(userName: str):
 def getUserPlaylists(userName: str, playlistName: str):
     session = getSession()
     
-    # Buscar a playlist do usuário específico
     playlist = session.execute(select(Playlist)
                                .where(Playlist.name == playlistName)
                                .where(Playlist.user_id == userName)
@@ -35,6 +35,20 @@ def getUserPlaylists(userName: str, playlistName: str):
         return {"message": f"Playlist {playlistName} for user {userName} not found"}
     
     return playlist
+
+@app.get("/api/get/userplaylists/{userName}")
+def getUserPlaylists(userName: str, playlistName: str):
+    session = getSession()
+    
+    playlist = session.execute(select(Playlist)
+                               .where(Playlist.user_id == userName)
+                               ).scalars()
+
+    if playlist is None:
+        return {"message": f"Playlists for user {userName} not found"}
+    
+    return playlist
+
 
 @app.post('/api/post/addMusicPlaylist')
 def addMusicToPlaylist(music: MusicModel):
@@ -52,9 +66,9 @@ def addMusicToPlaylist(music: MusicModel):
             session.commit()
         return {"message": f"música {music.name} adicionada a playlist {playlist.name} do usuário {user.name}"}
     except Exception as e:
-        return f'erro: {e}'
-
-from sqlalchemy import and_
+        if 'NoneType object has no attribute':
+            raise HTTPException(status_code=400, detail="Playlist não encontrada para esse usuário!")
+        
 
 @app.post("/api/post/createPlaylist")
 def createPlaylist(playlist: PlaylistModel):

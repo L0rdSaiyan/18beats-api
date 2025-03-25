@@ -33,8 +33,17 @@ def getUserPlaylists(userName: str, playlistName: str):
 
     if playlist is None:
         return {"message": f"Playlist {playlistName} for user {userName} not found"}
+
+    playlist_data = {
+        "id": playlist.id,
+        "name": playlist.name,
+        "user_id": playlist.user_id,
+        "musics": [{"id": music.id, "name": music.name} for music in playlist.musics]  
+    }
     
-    return playlist
+    return playlist_data
+
+
 @app.get("/api/get/userplaylists/{userName}")
 def getUserPlaylists(userName: str):
     session = getSession()
@@ -50,7 +59,7 @@ def getUserPlaylists(userName: str):
         playlist_dict = {
             "id": playlist.id,
             "name": playlist.name,
-            "user_id": playlist.user_id
+            "user_id": playlist.user_id,
         }
         playlist_list.append(playlist_dict)
     

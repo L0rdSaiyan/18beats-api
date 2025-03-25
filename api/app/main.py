@@ -35,7 +35,6 @@ def getUserPlaylists(userName: str, playlistName: str):
         return {"message": f"Playlist {playlistName} for user {userName} not found"}
     
     return playlist
-
 @app.get("/api/get/userplaylists/{userName}")
 def getUserPlaylists(userName: str):
     session = getSession()
@@ -45,9 +44,18 @@ def getUserPlaylists(userName: str):
     if not playlists:
         return {"message": f"Playlists for user {userName} not found"}
 
-    playlist_list = [playlist.as_dict() for playlist in playlists]
+    playlist_list = []
+    
+    for playlist in playlists:
+        playlist_dict = {
+            "id": playlist.id,
+            "name": playlist.name,
+            "user_id": playlist.user_id
+        }
+        playlist_list.append(playlist_dict)
     
     return playlist_list
+
 
 
 @app.post('/api/post/addMusicPlaylist')
